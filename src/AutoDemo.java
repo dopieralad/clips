@@ -61,7 +61,7 @@ class AutoDemo implements ActionListener
      {  
       try
         {
-         autoResources = ResourceBundle.getBundle("resources.AutoResources",Locale.getDefault());
+         autoResources = ResourceBundle.getBundle("AutoResources",Locale.getDefault());
         }
       catch (MissingResourceException mre)
         {
