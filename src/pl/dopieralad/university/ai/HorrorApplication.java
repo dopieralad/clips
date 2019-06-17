@@ -1,7 +1,7 @@
-import javax.swing.*; 
-import javax.swing.border.*; 
-import javax.swing.table.*;
-import java.awt.*; 
+package pl.dopieralad.university.ai;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*; 
 
 import java.text.BreakIterator;
@@ -44,7 +44,7 @@ or makeInstance call, retain it and then release it after the call is made.
 
 */
 
-class AutoDemo implements ActionListener
+class HorrorApplication implements ActionListener
   {  
    JLabel displayLabel;
    JButton nextButton;
@@ -57,7 +57,7 @@ class AutoDemo implements ActionListener
    boolean isExecuting = false;
    Thread executionThread;
       
-   AutoDemo()
+   HorrorApplication()
      {  
       try
         {
@@ -392,7 +392,7 @@ class AutoDemo implements ActionListener
       SwingUtilities.invokeLater(
         new Runnable() 
           {  
-           public void run() { new AutoDemo(); }  
+           public void run() { new HorrorApplication(); }
           });   
      }  
   }
