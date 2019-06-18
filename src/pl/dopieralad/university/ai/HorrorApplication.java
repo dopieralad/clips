@@ -12,51 +12,19 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-/* Implement FindFact which returns just a FactAddressValue or null */
-/* TBD Add size method to PrimitiveValue */
-
-/*
-
-Notes:
-
-This example creates just a single environment. If you create multiple environments,
-call the destroy method when you no longer need the environment. This will free the
-C data structures associated with the environment.
-
-   clips = new Environment();
-      .
-      . 
-      .
-   clips.destroy();
-
-Calling the clear, reset, load, loadFacts, run, eval, build, assertString,
-and makeInstance methods can trigger CLIPS garbage collection. If you need
-to retain access to a PrimitiveValue returned by a prior eval, assertString,
-or makeInstance call, retain it and then release it after the call is made.
-
-   PrimitiveValue pv1 = clips.eval("(myFunction foo)");
-   pv1.retain();
-   PrimitiveValue pv2 = clips.eval("(myFunction bar)");
-      .
-      .
-      .
-   pv1.release();
-
-*/
-
 class HorrorApplication implements ActionListener {
-    JLabel displayLabel;
-    JButton nextButton;
-    JButton prevButton;
-    JPanel choicesPanel;
-    ButtonGroup choicesButtons;
-    ResourceBundle autoResources;
+    private JLabel displayLabel;
+    private JButton nextButton;
+    private JButton prevButton;
+    private JPanel choicesPanel;
+    private ButtonGroup choicesButtons;
+    private ResourceBundle autoResources;
 
-    Environment clips;
-    boolean isExecuting = false;
-    Thread executionThread;
+    private Environment clips;
+    private boolean isExecuting = false;
+    private Thread executionThread;
 
-    HorrorApplication() {
+    private HorrorApplication() {
         try {
             autoResources = ResourceBundle.getBundle("Horror", Locale.getDefault());
         } catch (MissingResourceException mre) {
@@ -145,10 +113,6 @@ class HorrorApplication implements ActionListener {
         jfrm.setVisible(true);
     }
 
-    /****************/
-    /* nextUIState: */
-
-    /****************/
     private void nextUIState() throws Exception {
         /*=====================*/
         /* Get the state-list. */
@@ -230,10 +194,6 @@ class HorrorApplication implements ActionListener {
     /* ActionListener Methods */
     /*########################*/
 
-    /*******************/
-    /* actionPerformed */
-
-    /*******************/
     public void actionPerformed(
             ActionEvent ae) {
         try {
@@ -243,28 +203,18 @@ class HorrorApplication implements ActionListener {
         }
     }
 
-    /***********/
-    /* runAuto */
+    private void runAuto() {
+        Runnable runThread = () -> {
+            clips.run();
 
-    /***********/
-    public void runAuto() {
-        Runnable runThread =
-                new Runnable() {
-                    public void run() {
-                        clips.run();
-
-                        SwingUtilities.invokeLater(
-                                new Runnable() {
-                                    public void run() {
-                                        try {
-                                            nextUIState();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                    }
-                };
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    nextUIState();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        };
 
         isExecuting = true;
 
@@ -273,11 +223,7 @@ class HorrorApplication implements ActionListener {
         executionThread.start();
     }
 
-    /*********************/
-    /* onActionPerformed */
-
-    /*********************/
-    public void onActionPerformed(
+    private void onActionPerformed(
             ActionEvent ae) throws Exception {
         if (isExecuting) return;
 
@@ -293,7 +239,9 @@ class HorrorApplication implements ActionListener {
         /* Handle the Next button. */
         /*=========================*/
 
-        if (ae.getActionCommand().equals("Next")) {
+
+        final String actionCommand = ae.getActionCommand();
+        if ("Next".equals(actionCommand)) {
             if (choicesButtons.getButtonCount() == 0) {
                 clips.assertString("(next " + currentID + ")");
             } else {
@@ -303,19 +251,15 @@ class HorrorApplication implements ActionListener {
             }
 
             runAuto();
-        } else if (ae.getActionCommand().equals("Restart")) {
+        } else if ("Restart".equals(actionCommand)) {
             clips.reset();
             runAuto();
-        } else if (ae.getActionCommand().equals("Prev")) {
+        } else if ("Prev".equals(actionCommand)) {
             clips.assertString("(prev " + currentID + ")");
             runAuto();
         }
     }
 
-    /*****************/
-    /* wrapLabelText */
-
-    /*****************/
     private void wrapLabelText(
             JLabel label,
             String text) {
@@ -337,7 +281,7 @@ class HorrorApplication implements ActionListener {
         boundary.setText(text);
 
         StringBuffer trial = new StringBuffer();
-        StringBuffer real = new StringBuffer("<html><center>");
+        StringBuilder real = new StringBuilder("<html><center>");
 
         int start = boundary.first();
         for (int end = boundary.next(); end != BreakIterator.DONE;
@@ -365,11 +309,6 @@ class HorrorApplication implements ActionListener {
 
     public static void main(String[] args) {
         // Create the frame on the event dispatching thread.
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        new HorrorApplication();
-                    }
-                });
+        SwingUtilities.invokeLater(HorrorApplication::new);
     }
 }
