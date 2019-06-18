@@ -61,7 +61,7 @@ class HorrorApplication implements ActionListener
      {  
       try
         {
-         autoResources = ResourceBundle.getBundle("AutoResources",Locale.getDefault());
+         autoResources = ResourceBundle.getBundle("Horror",Locale.getDefault());
         }
       catch (MissingResourceException mre)
         {
@@ -138,7 +138,7 @@ class HorrorApplication implements ActionListener
       
       clips = new Environment();
       
-      clips.load("autodemo.clp");
+      clips.load("./resources/Horror.clp");
       
       clips.reset();
       runAuto();
