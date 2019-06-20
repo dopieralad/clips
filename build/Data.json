@@ -110,7 +110,39 @@
                             "text": "Are you in a cabin?",
                             "answers": {
                                 "Yes": {
-                                    "text": "Uh, oh! Well. What are you doing?"
+                                    "text": "Uh, oh! Well. What are you doing?",
+                                    "answers": {
+                                        "At camp": {
+                                            "text": "Are you having sex?",
+                                            "answers": {
+                                                "Yes": {
+                                                    "text": "Decapitated by a redneck zombie (Cabin in the woods)"
+                                                },
+                                                "No": {
+                                                    "text": "The world ends thanks to you! (Cabin in the woods)"
+                                                }
+                                            }
+                                        },
+                                        "Partying with my friends": {
+                                            "text": "Did you find a book of the dead?",
+                                            "answers": {
+                                                "Yes": {
+                                                    "text": "Dismembered by an axe (The evil dead)"
+                                                },
+                                                "No": {
+                                                    "text": "Are you having sex?",
+                                                    "answers": {
+                                                        "Yes": {
+                                                            "text": "Impaled during intercourse (Friday the 13th II)"
+                                                        },
+                                                        "No": {
+                                                            "text": "You get your head chopped off (Friday the 13th)"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 },
                                 "No": {
                                     "text": "Are you filming everything?",
