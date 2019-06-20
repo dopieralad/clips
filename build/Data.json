@@ -1,0 +1,77 @@
+{
+    "text": "Are you alone?",
+    "answers": {
+        "Yes": {
+            "text": "Are you at home?",
+            "answers": {
+                "Yes": {
+                    "text": "Are you on the phone?",
+                    "answers": {
+                        "Yes": {
+                            "text": "Stabbed to death by Ghostface (Scream)"
+                        },
+                        "No": {
+                            "text": "Are you asleep?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Murdered in your dream (Nightmare on Elm street)"
+                                },
+                                "No": {
+                                    "text": "Are you babysitting?",
+                                    "answers": {
+                                        "Yes": {
+                                            "text": "Stabbed to death by Michael Myers (Halloween)"
+                                        },
+                                        "No": {
+                                            "text": "Are you watching a VHS tape?",
+                                            "answers": {
+                                                "Yes": {
+                                                    "text": "Mysteriously die 7 days later (The Ring)"
+                                                },
+                                                "No": {
+                                                    "text": "You have Netflix and all is well!"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "No": {
+                    "text": "Are you in a hotel?",
+                    "answers": {
+                        "Yes": {
+                            "text": "Are you in a shower?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Stabbed to death in your birthday suit (Psycho)"
+                                },
+                                "No": {
+                                    "text": "Stuck for eternity in a haunted hotel room (1408)"
+                                }
+                            }
+                        },
+                        "No": {
+                            "text": "Are you in a hedge maze?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "You freeze to death while chasing your son (The shining)"
+                                },
+                                "No": {
+                                    "text": "Were you separated from your group?",
+                                    "answers": {
+                                        "Yes": {
+                                            "text": "Well, you're as good as dead. See every horror movie ever!"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
