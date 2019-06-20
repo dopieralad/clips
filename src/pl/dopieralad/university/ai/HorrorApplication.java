@@ -5,22 +5,20 @@ import pl.dopieralad.university.ai.clips.ClipsDecorator;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 import static pl.dopieralad.university.ai.util.ThrowingRunnable.withException;
 
-class HorrorApplication implements ActionListener {
+class HorrorApplication {
 
     private static final ResourceBundle messages = ResourceBundle.getBundle("Horror", Locale.getDefault());
 
     private JTextPane textPane;
-    private JButton nextButton;
-    private JButton prevButton;
-    private JPanel choicesPanel;
-    private ButtonGroup choicesButtons;
+    private JButton startButton;
+    private JButton goBackButton;
+    private JButton restartButton;
+    private JPanel buttonsPanel;
 
     private ClipsDecorator clips = new ClipsDecorator();
 
@@ -31,7 +29,7 @@ class HorrorApplication implements ActionListener {
     private HorrorApplication() {
         JFrame frame = new JFrame(messages.getString("Title"));
         frame.getContentPane().setLayout(new GridLayout(3, 1));
-        frame.setSize(350, 200);
+        frame.setSize(500, 150);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         textPane = new JTextPane();
@@ -45,24 +43,30 @@ class HorrorApplication implements ActionListener {
         JPanel displayPanel = new JPanel();
         displayPanel.add(textPane);
 
-        choicesPanel = new JPanel();
-        choicesButtons = new ButtonGroup();
+        buttonsPanel = new JPanel();
 
-        JPanel buttonPanel = new JPanel();
+        startButton = new JButton(messages.getString("Start"));
+        startButton.addActionListener(event -> withException(() -> {
+            final String currentId = clips.getCurrentId();
+            clips.assertString(String.format("(next %s)", currentId));
+            runAuto();
+        }).run());
 
-        prevButton = new JButton(messages.getString("Prev"));
-        prevButton.setActionCommand("Prev");
-        buttonPanel.add(prevButton);
-        prevButton.addActionListener(this);
+        goBackButton = new JButton(messages.getString("GoBack"));
+        goBackButton.addActionListener(event -> withException(() -> {
+            final String currentId = clips.getCurrentId();
+            clips.assertString(String.format("(prev %s)", currentId));
+            runAuto();
+        }).run());
 
-        nextButton = new JButton(messages.getString("Next"));
-        nextButton.setActionCommand("Next");
-        buttonPanel.add(nextButton);
-        nextButton.addActionListener(this);
+        restartButton = new JButton(messages.getString("Restart"));
+        restartButton.addActionListener(event -> {
+            clips.reset();
+            runAuto();
+        });
 
         frame.getContentPane().add(displayPanel);
-        frame.getContentPane().add(choicesPanel);
-        frame.getContentPane().add(buttonPanel);
+        frame.getContentPane().add(buttonsPanel);
 
         clips.load("./resources/Horror.clp");
         clips.reset();
@@ -76,80 +80,39 @@ class HorrorApplication implements ActionListener {
     }
 
     private void nextUiState() throws Exception {
-        PrimitiveValue primitiveValue = clips.getCurrentState();
+        final PrimitiveValue currentState = clips.getCurrentState();
 
-        /*========================================*/
-        /* Determine the Next/Prev button states. */
-        /*========================================*/
+        buttonsPanel.removeAll();
 
-        final String state = primitiveValue.getFactSlot("state").toString();
+        final String state = currentState.getFactSlot("state").toString();
         if ("final".equals(state)) {
-            nextButton.setActionCommand("Restart");
-            nextButton.setText(messages.getString("Restart"));
-            prevButton.setVisible(true);
+            buttonsPanel.add(goBackButton);
+            buttonsPanel.add(restartButton);
         } else if ("initial".equals(state)) {
-            nextButton.setActionCommand("Next");
-            nextButton.setText(messages.getString("Next"));
-            prevButton.setVisible(false);
+            buttonsPanel.add(startButton);
         } else {
-            nextButton.setActionCommand("Next");
-            nextButton.setText(messages.getString("Next"));
-            prevButton.setVisible(true);
+            buttonsPanel.add(goBackButton);
         }
 
-        choicesPanel.removeAll();
-        choicesButtons = new ButtonGroup();
-
-        PrimitiveValue validAnswers = primitiveValue.getFactSlot("valid-answers");
-
-        String selected = primitiveValue.getFactSlot("response").toString();
+        PrimitiveValue validAnswers = currentState.getFactSlot("valid-answers");
 
         for (int i = 0; i < validAnswers.size(); i++) {
             PrimitiveValue validAnswer = validAnswers.get(i);
-            JRadioButton radioButton;
 
-            if (validAnswer.toString().equals(selected)) {
-                radioButton = new JRadioButton(messages.getString(validAnswer.toString()), true);
-            } else {
-                radioButton = new JRadioButton(messages.getString(validAnswer.toString()), false);
-            }
+            final JButton answerButton = new JButton(messages.getString(validAnswer.toString()));
+            answerButton.addActionListener(event -> withException(() -> {
+                final String currentId = clips.getCurrentId();
+                clips.assertString(String.format("(next %s %s)", currentId, validAnswer));
+                runAuto();
+            }).run());
 
-            radioButton.setActionCommand(validAnswer.toString());
-            choicesPanel.add(radioButton);
-            choicesButtons.add(radioButton);
+            buttonsPanel.add(answerButton);
         }
 
-        choicesPanel.repaint();
+        buttonsPanel.repaint();
 
-        final String text = messages.getString(primitiveValue.getFactSlot("display").symbolValue());
+        final String text = messages.getString(currentState.getFactSlot("display").symbolValue());
 
         textPane.setText(text);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        withException(() -> onActionPerformed(actionEvent)).run();
-    }
-
-    private void onActionPerformed(ActionEvent actionEvent) throws Exception {
-        final String currentId = clips.getCurrentId();
-        final String actionCommand = actionEvent.getActionCommand();
-
-        if ("Next".equals(actionCommand)) {
-            if (choicesButtons.getButtonCount() == 0) {
-                clips.assertString(String.format("(next %s)", currentId));
-            } else {
-                final String answer = choicesButtons.getSelection().getActionCommand();
-                clips.assertString(String.format("(next %s %s)", currentId, answer));
-            }
-
-            runAuto();
-        } else if ("Restart".equals(actionCommand)) {
-            clips.reset();
-            runAuto();
-        } else if ("Prev".equals(actionCommand)) {
-            clips.assertString(String.format("(prev %s)", currentId));
-            runAuto();
-        }
     }
 }
