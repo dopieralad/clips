@@ -1,253 +1,146 @@
 package pl.dopieralad.university.ai;
 
-import CLIPSJNI.Environment;
 import CLIPSJNI.PrimitiveValue;
+import pl.dopieralad.university.ai.clips.ClipsDecorator;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.BreakIterator;
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import static pl.dopieralad.university.ai.util.ThrowingRunnable.withException;
+
 class HorrorApplication implements ActionListener {
-    private JLabel displayLabel;
+
+    private static final ResourceBundle messages = ResourceBundle.getBundle("Horror", Locale.getDefault());
+
+    private JTextPane textPane;
     private JButton nextButton;
     private JButton prevButton;
     private JPanel choicesPanel;
     private ButtonGroup choicesButtons;
-    private ResourceBundle autoResources;
 
-    private Environment clips;
-    private boolean isExecuting = false;
-    private Thread executionThread;
+    private ClipsDecorator clips = new ClipsDecorator();
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(HorrorApplication::new);
+    }
 
     private HorrorApplication() {
-        try {
-            autoResources = ResourceBundle.getBundle("Horror", Locale.getDefault());
-        } catch (MissingResourceException mre) {
-            mre.printStackTrace();
-            return;
-        }
+        JFrame frame = new JFrame(messages.getString("AutoDemo"));
+        frame.getContentPane().setLayout(new GridLayout(3, 1));
+        frame.setSize(350, 200);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        /*================================*/
-        /* Create a new JFrame container. */
-        /*================================*/
-
-        JFrame jfrm = new JFrame(autoResources.getString("AutoDemo"));
-
-        /*=============================*/
-        /* Specify FlowLayout manager. */
-        /*=============================*/
-
-        jfrm.getContentPane().setLayout(new GridLayout(3, 1));
-
-        /*=================================*/
-        /* Give the frame an initial size. */
-        /*=================================*/
-
-        jfrm.setSize(350, 200);
-
-        /*=============================================================*/
-        /* Terminate the program when the user closes the application. */
-        /*=============================================================*/
-
-        jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        /*===========================*/
-        /* Create the display panel. */
-        /*===========================*/
+        textPane = new JTextPane();
+        textPane.setOpaque(false);
+        textPane.setEditable(false);
+        textPane.setFocusable(false);
+        textPane.setBackground(UIManager.getColor("Label.background"));
+        textPane.setFont(UIManager.getFont("Label.font"));
+        textPane.setBorder(UIManager.getBorder("Label.border"));
 
         JPanel displayPanel = new JPanel();
-        displayLabel = new JLabel();
-        displayPanel.add(displayLabel);
-
-        /*===========================*/
-        /* Create the choices panel. */
-        /*===========================*/
+        displayPanel.add(textPane);
 
         choicesPanel = new JPanel();
         choicesButtons = new ButtonGroup();
 
-        /*===========================*/
-        /* Create the buttons panel. */
-        /*===========================*/
-
         JPanel buttonPanel = new JPanel();
 
-        prevButton = new JButton(autoResources.getString("Prev"));
+        prevButton = new JButton(messages.getString("Prev"));
         prevButton.setActionCommand("Prev");
         buttonPanel.add(prevButton);
         prevButton.addActionListener(this);
 
-        nextButton = new JButton(autoResources.getString("Next"));
+        nextButton = new JButton(messages.getString("Next"));
         nextButton.setActionCommand("Next");
         buttonPanel.add(nextButton);
         nextButton.addActionListener(this);
 
-        /*=====================================*/
-        /* Add the panels to the content pane. */
-        /*=====================================*/
-
-        jfrm.getContentPane().add(displayPanel);
-        jfrm.getContentPane().add(choicesPanel);
-        jfrm.getContentPane().add(buttonPanel);
-
-        /*========================*/
-        /* Load the auto program. */
-        /*========================*/
-
-        clips = new Environment();
+        frame.getContentPane().add(displayPanel);
+        frame.getContentPane().add(choicesPanel);
+        frame.getContentPane().add(buttonPanel);
 
         clips.load("./resources/Horror.clp");
-
         clips.reset();
         runAuto();
 
-        /*====================*/
-        /* Display the frame. */
-        /*====================*/
-
-        jfrm.setVisible(true);
+        frame.setVisible(true);
     }
 
-    private void nextUIState() throws Exception {
-        /*=====================*/
-        /* Get the state-list. */
-        /*=====================*/
+    private void runAuto() {
+        clips.runAsync().thenRun(withException(this::nextUiState));
+    }
 
-        String evalStr = "(find-all-facts ((?f state-list)) TRUE)";
-
-        String currentID = clips.eval(evalStr).get(0).getFactSlot("current").toString();
-
-        /*===========================*/
-        /* Get the current UI state. */
-        /*===========================*/
-
-        evalStr = "(find-all-facts ((?f UI-state)) " +
-                "(eq ?f:id " + currentID + "))";
-
-        PrimitiveValue fv = clips.eval(evalStr).get(0);
+    private void nextUiState() throws Exception {
+        PrimitiveValue primitiveValue = clips.getCurrentState();
 
         /*========================================*/
         /* Determine the Next/Prev button states. */
         /*========================================*/
 
-        if (fv.getFactSlot("state").toString().equals("final")) {
+        final String state = primitiveValue.getFactSlot("state").toString();
+        if ("final".equals(state)) {
             nextButton.setActionCommand("Restart");
-            nextButton.setText(autoResources.getString("Restart"));
+            nextButton.setText(messages.getString("Restart"));
             prevButton.setVisible(true);
-        } else if (fv.getFactSlot("state").toString().equals("initial")) {
+        } else if ("initial".equals(state)) {
             nextButton.setActionCommand("Next");
-            nextButton.setText(autoResources.getString("Next"));
+            nextButton.setText(messages.getString("Next"));
             prevButton.setVisible(false);
         } else {
             nextButton.setActionCommand("Next");
-            nextButton.setText(autoResources.getString("Next"));
+            nextButton.setText(messages.getString("Next"));
             prevButton.setVisible(true);
         }
-
-        /*=====================*/
-        /* Set up the choices. */
-        /*=====================*/
 
         choicesPanel.removeAll();
         choicesButtons = new ButtonGroup();
 
-        PrimitiveValue pv = fv.getFactSlot("valid-answers");
+        PrimitiveValue validAnswers = primitiveValue.getFactSlot("valid-answers");
 
-        String selected = fv.getFactSlot("response").toString();
+        String selected = primitiveValue.getFactSlot("response").toString();
 
-        for (int i = 0; i < pv.size(); i++) {
-            PrimitiveValue bv = pv.get(i);
-            JRadioButton rButton;
+        for (int i = 0; i < validAnswers.size(); i++) {
+            PrimitiveValue validAnswer = validAnswers.get(i);
+            JRadioButton radioButton;
 
-            if (bv.toString().equals(selected)) {
-                rButton = new JRadioButton(autoResources.getString(bv.toString()), true);
+            if (validAnswer.toString().equals(selected)) {
+                radioButton = new JRadioButton(messages.getString(validAnswer.toString()), true);
             } else {
-                rButton = new JRadioButton(autoResources.getString(bv.toString()), false);
+                radioButton = new JRadioButton(messages.getString(validAnswer.toString()), false);
             }
 
-            rButton.setActionCommand(bv.toString());
-            choicesPanel.add(rButton);
-            choicesButtons.add(rButton);
+            radioButton.setActionCommand(validAnswer.toString());
+            choicesPanel.add(radioButton);
+            choicesButtons.add(radioButton);
         }
 
         choicesPanel.repaint();
 
-        /*====================================*/
-        /* Set the label to the display text. */
-        /*====================================*/
+        final String text = messages.getString(primitiveValue.getFactSlot("display").symbolValue());
 
-        String theText = autoResources.getString(fv.getFactSlot("display").symbolValue());
-
-        wrapLabelText(displayLabel, theText);
-
-        executionThread = null;
-
-        isExecuting = false;
+        textPane.setText(text);
     }
 
-    /*########################*/
-    /* ActionListener Methods */
-    /*########################*/
-
-    public void actionPerformed(
-            ActionEvent ae) {
-        try {
-            onActionPerformed(ae);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        withException(() -> onActionPerformed(actionEvent)).run();
     }
 
-    private void runAuto() {
-        Runnable runThread = () -> {
-            clips.run();
+    private void onActionPerformed(ActionEvent actionEvent) throws Exception {
+        final String currentId = clips.getCurrentId();
+        final String actionCommand = actionEvent.getActionCommand();
 
-            SwingUtilities.invokeLater(() -> {
-                try {
-                    nextUIState();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-        };
-
-        isExecuting = true;
-
-        executionThread = new Thread(runThread);
-
-        executionThread.start();
-    }
-
-    private void onActionPerformed(
-            ActionEvent ae) throws Exception {
-        if (isExecuting) return;
-
-        /*=====================*/
-        /* Get the state-list. */
-        /*=====================*/
-
-        String evalStr = "(find-all-facts ((?f state-list)) TRUE)";
-
-        String currentID = clips.eval(evalStr).get(0).getFactSlot("current").toString();
-
-        /*=========================*/
-        /* Handle the Next button. */
-        /*=========================*/
-
-
-        final String actionCommand = ae.getActionCommand();
         if ("Next".equals(actionCommand)) {
             if (choicesButtons.getButtonCount() == 0) {
-                clips.assertString("(next " + currentID + ")");
+                clips.assertString(String.format("(next %s)", currentId));
             } else {
-                clips.assertString("(next " + currentID + " " +
-                        choicesButtons.getSelection().getActionCommand() +
-                        ")");
+                final String answer = choicesButtons.getSelection().getActionCommand();
+                clips.assertString(String.format("(next %s %s)", currentId, answer));
             }
 
             runAuto();
@@ -255,60 +148,8 @@ class HorrorApplication implements ActionListener {
             clips.reset();
             runAuto();
         } else if ("Prev".equals(actionCommand)) {
-            clips.assertString("(prev " + currentID + ")");
+            clips.assertString(String.format("(prev %s)", currentId));
             runAuto();
         }
-    }
-
-    private void wrapLabelText(
-            JLabel label,
-            String text) {
-        FontMetrics fm = label.getFontMetrics(label.getFont());
-        Container container = label.getParent();
-        int containerWidth = container.getWidth();
-        int textWidth = SwingUtilities.computeStringWidth(fm, text);
-        int desiredWidth;
-
-        if (textWidth <= containerWidth) {
-            desiredWidth = containerWidth;
-        } else {
-            int lines = (textWidth + containerWidth) / containerWidth;
-
-            desiredWidth = textWidth / lines;
-        }
-
-        BreakIterator boundary = BreakIterator.getWordInstance();
-        boundary.setText(text);
-
-        StringBuffer trial = new StringBuffer();
-        StringBuilder real = new StringBuilder("<html><center>");
-
-        int start = boundary.first();
-        for (int end = boundary.next(); end != BreakIterator.DONE;
-             start = end, end = boundary.next()) {
-            String word = text.substring(start, end);
-            trial.append(word);
-            int trialWidth = SwingUtilities.computeStringWidth(fm, trial.toString());
-            if (trialWidth > containerWidth) {
-                trial = new StringBuffer(word);
-                real.append("<br>");
-                real.append(word);
-            } else if (trialWidth > desiredWidth) {
-                trial = new StringBuffer();
-                real.append(word);
-                real.append("<br>");
-            } else {
-                real.append(word);
-            }
-        }
-
-        real.append("</html>");
-
-        label.setText(real.toString());
-    }
-
-    public static void main(String[] args) {
-        // Create the frame on the event dispatching thread.
-        SwingUtilities.invokeLater(HorrorApplication::new);
     }
 }
