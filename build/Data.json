@@ -72,6 +72,105 @@
                     }
                 }
             }
+        },
+        "No": {
+            "text": "Are you in a city?",
+            "answers": {
+                "Yes": {
+                    "text": "Are you in a mall?",
+                    "answers": {
+                        "Yes": {
+                            "text": "Is there a zombie apocalypse raging outside?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Cornered by zombies and turned into the undead (Dawn of the dead)"
+                                },
+                                "No": {
+                                    "text": "Murdered by killbots while partying (Chopping mall)"
+                                }
+                            }
+                        },
+                        "No": {
+                            "text": "Are you partying on a rooftop?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Eaten alive by an alien (Cloverfield)"
+                                },
+                                "No": {
+                                    "text": "Ripped to shreds by zombies (28 days later)"
+                                }
+                            }
+                        }
+                    }
+                },
+                "No": {
+                    "text": "Are you in the woods?",
+                    "answers": {
+                        "Yes": {
+                            "text": "Are you in a cabin?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Uh, oh! Well. What are you doing?"
+                                },
+                                "No": {
+                                    "text": "Are you filming everything?",
+                                    "answers": {
+                                        "Yes": {
+                                            "text": "Die of mysterious circumstances (The Blair Witch Project)"
+                                        },
+                                        "No": {
+                                            "text": "Killed with a strip of barbed wire (Wrong turn)"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "No": {
+                            "text": "Are you on the road?",
+                            "answers": {
+                                "Yes": {
+                                    "text": "Did you car get run off the road?",
+                                    "answers": {
+                                        "Yes": {
+                                            "text": "Your eyes are ripped out by a creeper (Jeepers Creepers)"
+                                        },
+                                        "No": {
+                                            "text": "Did you take a side trip?",
+                                            "answers": {
+                                                "Yes": {
+                                                    "text": "Impaled by a meat hook (The Texas chainsaw massacre)"
+                                                },
+                                                "No": {
+                                                    "text": "You stop overnight and get turned into a merman (House of 1,000 corpses)"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "No": {
+                                    "text": "Are you in a house?",
+                                    "answers": {
+                                        "Yes": {
+                                            "text": "Was there a murder in the house?",
+                                            "answers": {
+                                                "Yes": {
+                                                    "text": "Driven out of the house by murderous ghosts (The Amityville horror)"
+                                                },
+                                                "No": {
+                                                    "text": "No murders or burial ground? Talk about great resale value! You survived!"
+                                                }
+                                            }
+                                        },
+                                        "No": {
+                                            "text": "You've avoided enough cliches to make it out of this alive!"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
