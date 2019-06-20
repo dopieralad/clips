@@ -7,7 +7,7 @@ writeRules(rules);
 writeTranslations(translations);
 
 function transformData(data) {
-    let id = 0;
+    let nextId = 0;
     let rules = [];
     let translations = [];
 
@@ -18,53 +18,57 @@ function transformData(data) {
         translations: translations.join("\n")
     };
 
-    function processNode(node, parentId = "start", parentAnswer) {
-        const nodeId = node.id || id++;
+    function processNode(node, parentQuestionId = "start", parentAnswerId) {
+        const nodeId = nextId++;
+        const condition = `${parentQuestionId}${parentAnswerId ? ` ${parentAnswerId}` : ""}`;
 
         if (node.answers) {
-            const possibleAnswers = Object.keys(node.answers);
             const questionId = `question-${nodeId}`;
+
+            const answerIds = Object.keys(node.answers)
+                .map((answerKey, index) => {
+                    const answerId = `${questionId}-answer-${index}`;
+                    translations.push(`${answerId}=${answerKey}`);
+
+                    const nextQuestion = node.answers[answerKey];
+                    processNode(nextQuestion, questionId, answerId);
+
+                    return answerId;
+                });
 
             rules.push(`
                 (defrule ${questionId} ""
-                    (logical (${parentId}${parentAnswer ? ` ${parentAnswer}` : ""}))
+                    (logical (${condition}))
                     =>
                     (assert
                         (UI-state
                             (display ${questionId})
                             (relation-asserted ${questionId})
-                            (response ${possibleAnswers[0]})
-                            (valid-answers ${possibleAnswers.join(" ")})
+                            (response ${answerIds[0]})
+                            (valid-answers ${answerIds.join(" ")})
                         )
                    )
                 )
             `);
 
             translations.push(`${questionId}=${node.text}`);
-
-            for (const answer in node.answers) {
-                if (node.answers.hasOwnProperty(answer)) {
-                    const nextQuestion = node.answers[answer];
-                    processNode(nextQuestion, questionId, answer)
-                }
-            }
         } else {
-            const answerId = `answer-${nodeId}`;
+            const endingId = `ending-${nodeId}`;
 
             rules.push(`
-                (defrule ${answerId} ""
-                    (logical (${parentId}${parentAnswer ? ` ${parentAnswer}` : ""}))
+                (defrule ${endingId} ""
+                    (logical (${condition}))
                     =>
                     (assert
                         (UI-state
-                            (display ${answerId})
+                            (display ${endingId})
                             (state final)
                         )
                     )
                 )
             `);
 
-            translations.push(`answer-${nodeId}=${node.text}`);
+            translations.push(`${endingId}=${node.text}`);
         }
     }
 }
