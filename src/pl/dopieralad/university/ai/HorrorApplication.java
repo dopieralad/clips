@@ -29,7 +29,7 @@ class HorrorApplication implements ActionListener {
     }
 
     private HorrorApplication() {
-        JFrame frame = new JFrame(messages.getString("AutoDemo"));
+        JFrame frame = new JFrame(messages.getString("Title"));
         frame.getContentPane().setLayout(new GridLayout(3, 1));
         frame.setSize(350, 200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
